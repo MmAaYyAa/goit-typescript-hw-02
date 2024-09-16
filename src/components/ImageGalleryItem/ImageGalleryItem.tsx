@@ -1,11 +1,17 @@
-import { Component } from 'react';
+import React, { Component } from "react";
 import {
   ImageGalleryItemImg,
   ImageGalleryItemStyled,
-} from './ImageGalleryItem.styled';
+} from "./ImageGalleryItem.styled";
+import { ImageGalleryItemProps } from "../ComponentsProps/Props.types.ts";
 
-export default class ImageGalleryItem extends Component {
-  state = {
+interface ImageGalleryItemState {
+  largeImageURL: string;
+  tags: string;
+}
+
+export default class ImageGalleryItem extends Component<ImageGalleryItemProps> {
+  state: ImageGalleryItemState = {
     largeImageURL: this.props.largeImageURL,
     tags: this.props.tags,
   };

@@ -1,23 +1,35 @@
-import { useState, useEffect } from "react";
-import Searchbar from "../components/Searchbar/Searchbar";
-import ImageGallery from "../components/ImageGallery/ImageGallery";
+import React, { useState, useEffect } from "react";
+import Searchbar from "./Searchbar/Searchbar";
+import ImageGallery from "./ImageGallery/ImageGallery";
 import { serviceGetPhotos } from "../api/api";
-import Loader from "../components/Loader/Loader";
-import Modal from "../components/Modal/Modal";
-import Button from "../components/Button/Button";
+import Loader from "./Loader/Loader";
+import Modal from "./Modal/Modal";
+import Button from "./Button/Button";
 import { Notify } from "notiflix/build/notiflix-notify-aio";
 import StyledApp from "../App.styled";
+import { Image } from "../api/apiTypes";
+
+interface ModalObj {
+  largeImageURL: string;
+  tags: string;
+}
 
 export default function App() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [gallery, setGallery] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [quantityPages, setQuantityPages] = useState(null);
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [largeImageURL, setLargeImageURL] = useState(null);
-  const [tags, setTags] = useState(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [gallery, setGallery] = useState<Image[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [quantityPages, setQuantityPages] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [largeImageURL, setLargeImageURL] = useState<string | null>(null);
+  const [tags, setTags] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (error) {
+      Notify.failure(error);
+    }
+  }, [error]);
 
   useEffect(() => {
     if (!searchQuery) {
@@ -35,10 +47,11 @@ export default function App() {
           return;
         }
         if (hits.length > 0) {
-          setGallery((prev) => [...prev, ...hits]);
+          setGallery((prev: Image[]) => [...prev, ...hits]);
           setQuantityPages(Math.ceil(totalHits / 12));
         }
-      } catch (error) {
+      } catch (error: any) {
+        Notify.failure(error.message);
         setError(error.message);
       } finally {
         setIsLoading(false);
@@ -47,7 +60,7 @@ export default function App() {
     fetchGallery();
   }, [currentPage, searchQuery]);
 
-  const handleFormSubmit = (searchQuery) => {
+  const handleFormSubmit = (searchQuery: string) => {
     setCurrentPage(1);
     setQuantityPages(null);
     setGallery([]);
@@ -55,7 +68,7 @@ export default function App() {
     setSearchQuery(searchQuery);
   };
 
-  const handleModal = (obj) => {
+  const handleModal = (obj: ModalObj) => {
     setIsLoading(false);
     setShowModal(true);
     setLargeImageURL(obj.largeImageURL);
@@ -75,13 +88,19 @@ export default function App() {
     <StyledApp>
       <Searchbar onSubmit={handleFormSubmit}></Searchbar>
       {isLoading && <Loader />}
-      {error && Notify.failure(error)}
+
       {gallery && gallery.length > 0 && (
         <ImageGallery hits={gallery} onClick={handleModal} />
       )}
-      {currentPage < quantityPages && <Button handleBtnLoad={handleBtnLoad} />}
+      {currentPage < (quantityPages ?? 0) && (
+        <Button handleBtnLoad={handleBtnLoad} />
+      )}
       {showModal && (
-        <Modal largeImageURL={largeImageURL} tags={tags} onClose={onClose} />
+        <Modal
+          largeImageURL={largeImageURL || ""}
+          tags={tags || ""}
+          onClose={onClose}
+        />
       )}
     </StyledApp>
   );
